@@ -68,23 +68,58 @@ async def test_multiple_hosted_domain(google_client):
     assert exc.value.status_code == 403
 
 
+import os
+from googleapiclient.http import HttpMockSequence
+
+GOOGLE_GROUPS_DIR = os.path.join(os.path.dirname(__file__), "googlegroups")
+
+def datafile(filename):
+    return os.path.join(GOOGLE_GROUPS_DIR, filename)
+
 async def test_admin_google_groups(google_client):
     authenticator = GoogleOAuthenticator(
         hosted_domain=['email.com', 'mycollege.edu'],
         admin_google_groups={'email.com': ['fakeadmingroup']},
         google_group_whitelist={'email.com': ['fakegroup']}
     )
-    handler = google_client.handler_for_user(user_model('fakeadmin@email.com'))
-    admin_user_info = await authenticator.authenticate(handler, google_groups=['anotherone', 'fakeadmingroup'])
+    user = user_model('fakeadmin@email.com')
+    handler = google_client.handler_for_user(user)
+    user_email = user['email']
+    http = HttpMockSequence(
+        [
+            ({"status": "200"}, open(datafile("admin-api.json"), "rb").read()),
+            ({"status": "200"}, open(datafile("fakeadmin_groups.json"), "rb").read()),
+        ]
+    )
+    google_groups = await authenticator._google_groups_for_user(user_email=user_email, credentials=None, http=http)
+    admin_user_info = await authenticator.authenticate(handler, google_groups=google_groups)
     admin_user = admin_user_info['admin']
     assert admin_user == True
-    handler = google_client.handler_for_user(user_model('fakewhitelisted@email.com'))
-    whitelist_user_info = await authenticator.authenticate(handler, google_groups=['anotherone', 'fakegroup'])
+    user = user_model('fakewhitelisted@email.com')
+    handler = google_client.handler_for_user(user)
+    user_email = user['email']
+    http = HttpMockSequence(
+        [
+            ({"status": "200"}, open(datafile("admin-api.json"), "rb").read()),
+            ({"status": "200"}, open(datafile("fakewhitelisted_groups.json"), "rb").read()),
+        ]
+    )
+    google_groups = await authenticator._google_groups_for_user(user_email=user_email, credentials=None, http=http)
+    whitelist_user_info = await authenticator.authenticate(handler, google_groups=google_groups)
     whitelisted_user_groups = whitelist_user_info['auth_state']['google_user']['google_groups']
     admin_user = whitelist_user_info['admin']
     assert 'fakegroup' in whitelisted_user_groups
     assert admin_user == False
-    handler = google_client.handler_for_user(user_model('fakenonwhitelisted@email.com'))
+    user = user_model('fakenonwhitelisted@email.com')
+    handler = google_client.handler_for_user(user)
+    user_email = user['email']
+    http = HttpMockSequence(
+        [
+            ({"status": "200"}, open(datafile("admin-api.json"), "rb").read()),
+            ({"status": "200"}, open(datafile("fakewhitelisted_groups.json"), "rb").read()),
+        ]
+    )
+    google_groups = await authenticator._google_groups_for_user(user_email=user_email, credentials=None, http=http)
     whitelisted_user_groups = await authenticator.authenticate(handler, google_groups=['anotherone', 'fakenonwhitelistedgroup'])
     assert whitelisted_user_groups is None
 
@@ -94,15 +129,42 @@ async def test_whitelisted_google_groups(google_client):
         hosted_domain=['email.com', 'mycollege.edu'],
         google_group_whitelist={'email.com': ['fakegroup']}
     )
-    handler = google_client.handler_for_user(user_model('fakeadmin@email.com'))
-    admin_user_info = await authenticator.authenticate(handler, google_groups=['anotherone', 'fakeadmingroup'])
+    user = user_model('fakeadmin@email.com')
+    handler = google_client.handler_for_user(user)
+    user_email = user['email']
+    http = HttpMockSequence(
+        [
+            ({"status": "200"}, open(datafile("admin-api.json"), "rb").read()),
+            ({"status": "200"}, open(datafile("fakeadmin_groups.json"), "rb").read()),
+        ]
+    )
+    google_groups = await authenticator._google_groups_for_user(user_email=user_email, credentials=None, http=http)
+    admin_user_info = await authenticator.authenticate(handler, google_groups=google_groups)
     assert admin_user_info is None
-    handler = google_client.handler_for_user(user_model('fakewhitelisted@email.com'))
-    whitelist_user_info = await authenticator.authenticate(handler, google_groups=['anotherone', 'fakegroup'])
+    user = user_model('fakewhitelisted@email.com')
+    handler = google_client.handler_for_user(user)
+    user_email = user['email']
+    http = HttpMockSequence(
+        [
+            ({"status": "200"}, open(datafile("admin-api.json"), "rb").read()),
+            ({"status": "200"}, open(datafile("fakewhitelisted_groups.json"), "rb").read()),
+        ]
+    )
+    google_groups = await authenticator._google_groups_for_user(user_email=user_email, credentials=None, http=http)
+    whitelist_user_info = await authenticator.authenticate(handler, google_groups=google_groups)
     whitelisted_user_groups = whitelist_user_info['auth_state']['google_user']['google_groups']
     admin_field = whitelist_user_info.get('admin')
     assert 'fakegroup' in whitelisted_user_groups
     assert admin_field is None
-    handler = google_client.handler_for_user(user_model('fakenonwhitelisted@email.com'))
+    user = user_model('fakenonwhitelisted@email.com')
+    handler = google_client.handler_for_user(user)
+    user_email = user['email']
+    http = HttpMockSequence(
+        [
+            ({"status": "200"}, open(datafile("admin-api.json"), "rb").read()),
+            ({"status": "200"}, open(datafile("fakewhitelisted_groups.json"), "rb").read()),
+        ]
+    )
+    google_groups = await authenticator._google_groups_for_user(user_email=user_email, credentials=None, http=http)
     whitelisted_user_groups = await authenticator.authenticate(handler, google_groups=['anotherone', 'fakenonwhitelistedgroup'])
     assert whitelisted_user_groups is None

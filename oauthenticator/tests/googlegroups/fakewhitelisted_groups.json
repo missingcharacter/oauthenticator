@@ -1,0 +1,23 @@
+{
+    "kind": "directory#groups",
+    "groups": [
+     {
+      "kind": "directory#group",
+      "id": "anotherone group's unique ID",
+      "etag": "anotherone group's unique ETag",
+      "email": "anotherone@email.com",
+      "name": "another group",
+      "directMembersCount": "80",
+      "description": "Another group"
+     },
+     {
+      "kind": "directory#group",
+      "id": "fake group's unique ID",
+      "etag": "fake group's unique ETag",
+      "email": "fakegroup@email.com",
+      "name": "fake group",
+      "directMembersCount": "40",
+      "description": "Fake group"
+     }
+  ]
+}

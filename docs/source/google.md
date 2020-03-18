@@ -24,7 +24,7 @@ and give it read only access to users and groups.
 2. Click add (`+`) **Create Service Account**, enter a name and description for the service account. You can use the default service account ID, or choose a different, unique one. When done click **Create**.
 3. The **Service account permissions (optional)** section that follows is not required. Click **Continue**.
 4. On the **Grant users access to this service account** screen, scroll down to the **Create key** section. Click add (`+`) **Create key**.
-5. n the side panel that appears, select the format for your key: **JSON**
+5. On the side panel that appears, select the format for your key: **JSON**
 6. Click **Create**. Your new public/private key pair is generated and downloaded to your machine; it serves as the only copy of this key. For information on how to store it securely, see [Managing service account keys](https://cloud.google.com/iam/docs/understanding-service-accounts#managing_service_account_keys).
 7. Click **Close** on the **Private key saved to your computer** dialog, then click **Done** to return to the table of your service accounts.
 8. Locate the newly-created service account in the table. Under `Actions`, click  then **Edit**.
@@ -63,3 +63,7 @@ c.GoogleOAuthenticator.google_service_account_keys = {'example.com': '/path/to/s
 c.GoogleOAuthenticator.google_group_whitelist = {'example.com': ['somegroupwithaccess', 'othergroupwithaccess'] }
 ```
 ### You are done!
+
+## References
+
+- [Perform G Suite Domain-Wide Delegation of Authority](https://developers.google.com/admin-sdk/directory/v1/guides/delegation)
