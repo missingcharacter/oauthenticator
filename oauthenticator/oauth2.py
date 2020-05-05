@@ -18,7 +18,7 @@ from jupyterhub.handlers import BaseHandler
 from jupyterhub.auth import Authenticator
 from jupyterhub.utils import url_path_join
 
-from traitlets import Unicode, Bool, List, default
+from traitlets import Dict, Unicode, Bool, List, default
 
 
 def guess_callback_uri(protocol, host, hub_server_url):
@@ -57,6 +57,11 @@ class OAuthLoginHandler(OAuth2Mixin, BaseHandler):
 
     Typically subclasses will need
     """
+
+    extra_params = Dict(
+        Unicode(),
+        help="Add extra_params to authorize_redirect"
+    ).tag(config=True)
 
     # these URLs are part of the OAuth2Mixin API
     # get them from the Authenticator object
@@ -101,13 +106,15 @@ class OAuthLoginHandler(OAuth2Mixin, BaseHandler):
     def get(self):
         redirect_uri = self.authenticator.get_callback_url(self)
         self.log.info('OAuth redirect: %r', redirect_uri)
+        extra_params = self.extra_params
         state = self.get_state()
         self.set_state_cookie(state)
+        extra_params['state'] = state
         self.authorize_redirect(
             redirect_uri=redirect_uri,
             client_id=self.authenticator.client_id,
             scope=self.authenticator.scope,
-            extra_params={'state': state},
+            extra_params=extra_params,
             response_type='code',
         )
 
@@ -226,6 +233,14 @@ class OAuthenticator(Authenticator):
     authenticate (method takes one arg - the request handler handling the oauth callback)
     """
 
+    extra_params = Dict(
+        Unicode(),
+        help="Add extra_params to authorize_redirect"
+    ).tag(config=True)
+
+    def _set_extra_params(self):
+       OAuthLoginHandler.extra_params = self.extra_params
+
     login_handler = OAuthLoginHandler
     callback_handler = OAuthCallbackHandler
 
@@ -305,7 +320,7 @@ class OAuthenticator(Authenticator):
 
     def get_callback_url(self, handler=None):
         """Get my OAuth redirect URL
-        
+
         Either from config or guess based on the current request.
         """
         if self.oauth_callback_url:

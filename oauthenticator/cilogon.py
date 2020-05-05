@@ -22,25 +22,11 @@ from tornado import web
 from tornado.httputil import url_concat
 from tornado.httpclient import HTTPRequest, AsyncHTTPClient
 
-from traitlets import Unicode, List, Bool, default, validate
+from traitlets import Dict, Unicode, List, Bool, default, validate
 
 from jupyterhub.auth import LocalAuthenticator
 
 from .oauth2 import OAuthLoginHandler, OAuthenticator
-
-
-class CILogonLoginHandler(OAuthLoginHandler):
-    """See http://www.cilogon.org/oidc for general information."""
-
-    def authorize_redirect(self, *args, **kwargs):
-        """Add idp, skin to redirect params"""
-        extra_params = kwargs.setdefault('extra_params', {})
-        if self.authenticator.idp:
-            extra_params["selected_idp"] = self.authenticator.idp
-        if self.authenticator.skin:
-            extra_params["skin"] = self.authenticator.skin
-
-        return super().authorize_redirect(*args, **kwargs)
 
 
 class CILogonOAuthenticator(OAuthenticator):
@@ -48,7 +34,17 @@ class CILogonOAuthenticator(OAuthenticator):
 
     client_id_env = 'CILOGON_CLIENT_ID'
     client_secret_env = 'CILOGON_CLIENT_SECRET'
-    login_handler = CILogonLoginHandler
+
+    extra_params = Dict(
+        Unicode(),
+        help="Add extra_params to authorize_redirect"
+    ).tag(config=True)
+
+    def _set_extra_params(self):
+        if self.authenticator.idp:
+            self.extra_params["selected_idp"] = self.authenticator.idp
+        if self.authenticator.skin:
+            self.extra_params["skin"] = self.authenticator.skin
 
     cilogon_host = Unicode(os.environ.get("CILOGON_HOST") or "cilogon.org", config=True)
 
