@@ -233,13 +233,13 @@ class OAuthenticator(Authenticator):
     authenticate (method takes one arg - the request handler handling the oauth callback)
     """
 
-    extra_params = Dict(
+    authorize_redirect_params = Dict(
         Unicode(),
         help="Add extra_params to authorize_redirect"
     ).tag(config=True)
 
     def _set_extra_params(self):
-       OAuthLoginHandler.extra_params = self.extra_params
+       OAuthLoginHandler.extra_params = self.authorize_redirect_params
 
     login_handler = OAuthLoginHandler
     callback_handler = OAuthCallbackHandler

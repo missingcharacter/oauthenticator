@@ -35,16 +35,16 @@ class CILogonOAuthenticator(OAuthenticator):
     client_id_env = 'CILOGON_CLIENT_ID'
     client_secret_env = 'CILOGON_CLIENT_SECRET'
 
-    extra_params = Dict(
+    authorize_redirect_params = Dict(
         Unicode(),
         help="Add extra_params to authorize_redirect"
     ).tag(config=True)
 
     def _set_extra_params(self):
         if self.authenticator.idp:
-            self.extra_params["selected_idp"] = self.authenticator.idp
+            self.authorize_redirect_params["selected_idp"] = self.authenticator.idp
         if self.authenticator.skin:
-            self.extra_params["skin"] = self.authenticator.skin
+            self.authorize_redirect_params["skin"] = self.authenticator.skin
 
     cilogon_host = Unicode(os.environ.get("CILOGON_HOST") or "cilogon.org", config=True)
 
